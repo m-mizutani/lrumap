@@ -27,18 +27,19 @@ func TestBasicScenario(t *testing.T) {
 	assert.Nil(t, res)
 
 	// Put data with key1
-	err := lru.Put(&data, 3)
+	err := lru.Put(&data, 2)
 	assert.Nil(t, err)
+	assert.Equal(t, 1, lru.Size())
 	// Can lookup data with key1, but can not with key2
 	assert.NotNil(t, lru.Get(&key1))
 	assert.Nil(t, lru.Get(&key2))
 
 	// Prune() updates current tick and remove expired data
-	assert.Nil(t, lru.Prune(1))
+	assert.Equal(t, 0, len(*lru.Prune(1)))
 	// But data's ttl is 3, current tick is 1
 	assert.NotNil(t, lru.Get(&key1))
 	// Prune() updates current tick to 2
-	assert.Nil(t, lru.Prune(1))
+	assert.Equal(t, 0, len(*lru.Prune(1)))
 	assert.NotNil(t, lru.Get(&key1))
 
 	// Prune() updates current tick to 3, and run pruning process.
