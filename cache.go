@@ -5,10 +5,14 @@ import (
 	"errors"
 )
 
+// LruData is an interface for data object for LruMap.
+// Key() must returns unique key that is byte slice in the table.
 type LruData interface {
 	Key() *[]byte
 }
 
+// LruMap is a main structure of the library. A developer accesses
+// data object in the table via LruMap instance.
 type LruMap struct {
 	table   map[hashValue]*bucket
 	frames  []frame
@@ -17,6 +21,7 @@ type LruMap struct {
 	count   int
 }
 
+// New is a constructor of LruMap
 func New(maxTick tick) *LruMap {
 	lruMap := LruMap{
 		table:   map[hashValue]*bucket{},
@@ -26,6 +31,8 @@ func New(maxTick tick) *LruMap {
 	return &lruMap
 }
 
+// Put inserts data object into LruMap table.
+// LruMap does not allow to insert object with duplicated key.
 func (x *LruMap) Put(obj LruData, ttl tick) error {
 	if ttl > x.maxTick {
 		return errors.New("TTL is over maxTick")
@@ -51,6 +58,7 @@ func (x *LruMap) Put(obj LruData, ttl tick) error {
 	return nil
 }
 
+// Get returns data object if exists.
 func (x *LruMap) Get(key *[]byte) LruData {
 	hv := fnvHash(key)
 	bkt := x.table[hv]
@@ -65,6 +73,8 @@ func (x *LruMap) Get(key *[]byte) LruData {
 	return searched.data
 }
 
+// Prune is update current tick by adding `progress`.
+// If there is data object(s), they will be pruned and returned as slice.
 func (x *LruMap) Prune(progress tick) *[]LruData {
 	var res []LruData
 	for i := tick(0); i < progress; i++ {
@@ -77,6 +87,7 @@ func (x *LruMap) Prune(progress tick) *[]LruData {
 	return &res
 }
 
+// Size returns number of data object in the LruMap table.
 func (x *LruMap) Size() int {
 	return x.count
 }
